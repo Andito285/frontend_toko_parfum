@@ -20,15 +20,15 @@ export default function AdminNavbar({ user, onLogout }) {
     };
 
     return (
-        <nav className="bg-gradient-to-r from-indigo-700 to-purple-700 shadow-lg sticky top-0 z-50">
+        <nav className="bg-gradient-to-r from-black via-gray-900 to-black shadow-lg sticky top-0 z-50 border-b border-yellow-500/50">
             <div className="container mx-auto px-4">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo */}
                     <Link
                         href="/admin/dashboard"
-                        className="text-2xl font-bold text-white hover:text-indigo-200 transition-colors flex items-center space-x-2"
+                        className="text-2xl font-bold text-white hover:text-yellow-300 transition-colors flex items-center space-x-2"
                     >
-                        <span>Admin<span className="text-yellow-300">Panel</span></span>
+                        <span>Admin<span className="text-yellow-400">Panel</span></span>
                     </Link>
 
                     {/* Desktop Menu */}
@@ -37,7 +37,7 @@ export default function AdminNavbar({ user, onLogout }) {
                             <Link
                                 key={item.name}
                                 href={item.href}
-                                className="text-white/90 hover:text-white hover:bg-white/10 px-4 py-2 rounded-lg font-medium transition-all"
+                                className="text-white/90 hover:text-yellow-400 hover:bg-yellow-500/10 px-4 py-2 rounded-lg font-medium transition-all"
                             >
                                 {item.name}
                             </Link>
@@ -48,26 +48,26 @@ export default function AdminNavbar({ user, onLogout }) {
                     <div className="hidden md:flex items-center space-x-4">
                         <div className="flex items-center space-x-3">
                             <div className="flex items-center space-x-2">
-                                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
-                                    <span className="text-indigo-700 font-bold text-sm">
+                                <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                                    <span className="text-black font-bold text-sm">
                                         {user?.name?.charAt(0).toUpperCase() || "A"}
                                     </span>
                                 </div>
                                 <div className="text-white">
                                     <p className="font-medium text-sm">{user?.name || "Admin"}</p>
-                                    <p className="text-xs text-white/70">Administrator</p>
+                                    <p className="text-xs text-yellow-400/70">Administrator</p>
                                 </div>
                             </div>
                         </div>
                         <Link
                             href="/"
-                            className="text-white/80 hover:text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                            className="text-white/80 hover:text-yellow-400 px-3 py-2 rounded-lg transition-colors text-sm border border-yellow-500/30 hover:border-yellow-500"
                         >
                             Lihat Toko
                         </Link>
                         <button
                             onClick={handleLogout}
-                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
+                            className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
                         >
                             Keluar
                         </button>
@@ -106,33 +106,33 @@ export default function AdminNavbar({ user, onLogout }) {
 
                 {/* Mobile Menu */}
                 {isMenuOpen && (
-                    <div className="md:hidden py-4 border-t border-white/20">
+                    <div className="md:hidden py-4 border-t border-yellow-500/30">
                         <div className="flex flex-col space-y-2">
                             {navItems.map((item) => (
                                 <Link
                                     key={item.name}
                                     href={item.href}
-                                    className="px-4 py-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+                                    className="px-4 py-2 text-white hover:bg-yellow-500/10 rounded-lg transition-colors"
                                     onClick={() => setIsMenuOpen(false)}
                                 >
                                     {item.name}
                                 </Link>
                             ))}
-                            <div className="flex flex-col space-y-3 pt-3 border-t border-white/20 px-4">
+                            <div className="flex flex-col space-y-3 pt-3 border-t border-yellow-500/30 px-4">
                                 <div className="flex items-center space-x-2 py-2">
-                                    <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
-                                        <span className="text-indigo-700 font-bold text-sm">
+                                    <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                                        <span className="text-black font-bold text-sm">
                                             {user?.name?.charAt(0).toUpperCase() || "A"}
                                         </span>
                                     </div>
                                     <div className="text-white">
                                         <p className="font-medium text-sm">{user?.name || "Admin"}</p>
-                                        <p className="text-xs text-white/70">Administrator</p>
+                                        <p className="text-xs text-yellow-400/70">Administrator</p>
                                     </div>
                                 </div>
                                 <Link
                                     href="/"
-                                    className="text-white/80 hover:text-white px-4 py-2 rounded-lg transition-colors text-center border border-white/30"
+                                    className="text-white/80 hover:text-yellow-400 px-4 py-2 rounded-lg transition-colors text-center border border-yellow-500/30"
                                     onClick={() => setIsMenuOpen(false)}
                                 >
                                     Lihat Toko
@@ -142,7 +142,7 @@ export default function AdminNavbar({ user, onLogout }) {
                                         handleLogout();
                                         setIsMenuOpen(false);
                                     }}
-                                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium"
+                                    className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-medium"
                                 >
                                     Keluar
                                 </button>

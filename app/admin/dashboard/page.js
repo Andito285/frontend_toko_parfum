@@ -48,16 +48,16 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-indigo-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-yellow-500"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="bg-red-50 text-red-700 p-4 rounded-lg border border-red-200">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-black">
+        <div className="bg-red-900/50 text-red-400 p-4 rounded-lg border border-red-600/30">
           {error}
         </div>
       </div>
@@ -65,12 +65,12 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-black p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Dashboard Admin</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-white">Dashboard <span className="text-yellow-400">Admin</span></h1>
+          <p className="text-gray-400 mt-1">
             Selamat datang, {getAuthUser()?.name}!
           </p>
         </div>
@@ -80,29 +80,29 @@ export default function AdminDashboardPage() {
           <StatCard
             title="Total Parfum"
             value={stats.totalPerfumes}
-            color="bg-blue-50 text-blue-700"
+            color="bg-blue-500/10 text-blue-400 border-blue-500/30"
           />
           <StatCard
             title="Total Pengguna"
             value={stats.totalUsers}
-            color="bg-green-50 text-green-700"
+            color="bg-green-500/10 text-green-400 border-green-500/30"
           />
           <StatCard
             title="Penjualan Hari Ini"
             value={`Rp${(stats.totalSales || 0).toLocaleString("id-ID")}`}
-            color="bg-yellow-50 text-yellow-700"
+            color="bg-yellow-500/10 text-yellow-400 border-yellow-500/30"
           />
           <StatCard
             title="Stok Rendah"
             value={stats.lowStockCount}
-            color="bg-red-50 text-red-700"
+            color="bg-red-500/10 text-red-400 border-red-500/30"
           />
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">
-            Aksi Cepat
+        <div className="bg-gray-900 rounded-xl shadow-md border border-yellow-600/30 p-6">
+          <h2 className="text-xl font-semibold text-white mb-4">
+            Aksi <span className="text-yellow-400">Cepat</span>
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <QuickAction
@@ -135,7 +135,7 @@ export default function AdminDashboardPage() {
 
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-gray-500">
-          © 2025 JamalFragrance. Semua hak dilindungi.
+          © 2025 <span className="text-yellow-500">JamalFragrance</span>. Semua hak dilindungi.
         </div>
       </div>
     </div>
@@ -145,7 +145,7 @@ export default function AdminDashboardPage() {
 // Komponen Stat Card
 function StatCard({ title, value, icon, color }) {
   return (
-    <div className={`rounded-xl p-5 shadow-sm ${color}`}>
+    <div className={`rounded-xl p-5 shadow-sm border ${color}`}>
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium opacity-80">{title}</p>
@@ -162,10 +162,10 @@ function QuickAction({ label, onClick, icon }) {
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition cursor-pointer"
+      className="flex flex-col items-center justify-center p-4 bg-gray-800 hover:bg-gray-700 border border-yellow-600/20 rounded-lg transition cursor-pointer"
     >
       <span className="text-2xl mb-2">{icon}</span>
-      <span className="text-sm font-medium text-gray-800">{label}</span>
+      <span className="text-sm font-medium text-white">{label}</span>
     </button>
   );
 }

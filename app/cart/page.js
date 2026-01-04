@@ -89,20 +89,20 @@ export default function CartPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="min-h-screen flex items-center justify-center bg-black">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-indigo-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Memuat keranjang...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-yellow-500 mx-auto"></div>
+                    <p className="mt-4 text-gray-400">Memuat keranjang...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-black">
             <main className="container mx-auto px-4 py-8 max-w-4xl">
-                <h1 className="text-3xl font-bold text-gray-800 mb-2">🛒 Keranjang Belanja</h1>
-                <p className="text-gray-600 mb-8">
+                <h1 className="text-3xl font-bold text-white mb-2">🛒 Keranjang <span className="text-yellow-400">Belanja</span></h1>
+                <p className="text-gray-400 mb-8">
                     {cart.length > 0
                         ? `Halo ${user?.name}, kamu memiliki ${getTotalItems()} item di keranjang`
                         : "Keranjang kamu kosong"}
@@ -110,17 +110,17 @@ export default function CartPage() {
 
                 {/* Messages */}
                 {error && (
-                    <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-xl border border-red-200">
+                    <div className="mb-6 p-4 bg-red-900/50 text-red-400 rounded-xl border border-red-600/30">
                         ❌ {error}
                     </div>
                 )}
                 {success && (
-                    <div className="mb-6 p-4 bg-green-50 text-green-700 rounded-xl border border-green-200">
+                    <div className="mb-6 p-4 bg-green-900/50 text-green-400 rounded-xl border border-green-600/30">
                         {success}
                         <div className="mt-3">
                             <Link
                                 href="/"
-                                className="inline-block px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                className="inline-block px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black rounded-lg hover:from-yellow-400 hover:to-yellow-500 transition-colors font-medium"
                             >
                                 Lanjut Belanja
                             </Link>
@@ -129,15 +129,15 @@ export default function CartPage() {
                 )}
 
                 {cart.length === 0 && !success ? (
-                    <div className="bg-white rounded-2xl shadow-md p-12 text-center">
+                    <div className="bg-gray-900 rounded-2xl shadow-md border border-yellow-600/30 p-12 text-center">
                         <span className="text-8xl block mb-6">🛒</span>
-                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Keranjang Kosong</h2>
-                        <p className="text-gray-600 mb-6">
+                        <h2 className="text-2xl font-bold text-white mb-2">Keranjang Kosong</h2>
+                        <p className="text-gray-400 mb-6">
                             Yuk, mulai belanja parfum favoritmu!
                         </p>
                         <Link
                             href="/"
-                            className="inline-block px-8 py-3 bg-indigo-600 text-white rounded-full font-semibold hover:bg-indigo-700 transition-colors"
+                            className="inline-block px-8 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black rounded-full font-semibold hover:from-yellow-400 hover:to-yellow-500 transition-colors"
                         >
                             Mulai Belanja
                         </Link>
@@ -149,52 +149,56 @@ export default function CartPage() {
                             {cart.map((item) => (
                                 <div
                                     key={item.id}
-                                    className="bg-white rounded-2xl shadow-md p-4 flex items-center space-x-4"
+                                    className="bg-gray-900 rounded-2xl shadow-md border border-yellow-600/20 p-4 flex items-center space-x-4"
                                 >
-                                    <div className="w-24 h-24 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
-                                        {item.primary_image?.url ? (
+                                    <div className="w-24 h-24 bg-gray-800 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                        {item.primary_image?.url || item.image ? (
                                             <img
-                                                src={item.primary_image.url}
+                                                src={item.primary_image?.url || item.image}
                                                 alt={item.name}
                                                 className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    e.target.onerror = null;
+                                                    e.target.style.display = 'none';
+                                                    e.target.parentElement.innerHTML = '<span class="text-4xl">🧴</span>';
+                                                }}
                                             />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-4xl">
-                                            </div>
+                                            <span className="text-4xl">🧴</span>
                                         )}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <h3 className="font-bold text-lg text-gray-800 truncate">
+                                        <h3 className="font-bold text-lg text-white truncate">
                                             {item.name}
                                         </h3>
-                                        <p className="text-indigo-600 font-semibold">
+                                        <p className="text-yellow-400 font-semibold">
                                             Rp{Number(item.price).toLocaleString("id-ID")}
                                         </p>
                                         <div className="flex items-center space-x-3 mt-2">
                                             <button
                                                 onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full font-bold text-lg transition-colors"
+                                                className="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-full font-bold text-lg transition-colors text-white"
                                             >
                                                 −
                                             </button>
-                                            <span className="w-8 text-center font-semibold text-lg">
+                                            <span className="w-8 text-center font-semibold text-lg text-white">
                                                 {item.quantity}
                                             </span>
                                             <button
                                                 onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full font-bold text-lg transition-colors"
+                                                className="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-full font-bold text-lg transition-colors text-white"
                                             >
                                                 +
                                             </button>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-bold text-lg text-gray-800">
+                                        <p className="font-bold text-lg text-white">
                                             Rp{(item.price * item.quantity).toLocaleString("id-ID")}
                                         </p>
                                         <button
                                             onClick={() => removeFromCart(item.id)}
-                                            className="mt-2 text-red-500 hover:text-red-700 text-sm flex items-center justify-end space-x-1"
+                                            className="mt-2 text-red-400 hover:text-red-300 text-sm flex items-center justify-end space-x-1"
                                         >
                                             <span>🗑️</span>
                                             <span>Hapus</span>
@@ -206,24 +210,24 @@ export default function CartPage() {
 
                         {/* Order Summary */}
                         <div className="lg:col-span-1">
-                            <div className="bg-white rounded-2xl shadow-md p-6 sticky top-6">
-                                <h2 className="text-xl font-bold text-gray-800 mb-6">
+                            <div className="bg-gray-900 rounded-2xl shadow-md border border-yellow-600/30 p-6 sticky top-6">
+                                <h2 className="text-xl font-bold text-white mb-6">
                                     Ringkasan Pesanan
                                 </h2>
 
                                 <div className="space-y-3 mb-6">
-                                    <div className="flex justify-between text-gray-600">
+                                    <div className="flex justify-between text-gray-400">
                                         <span>Subtotal ({getTotalItems()} item)</span>
-                                        <span>Rp{getTotalPrice().toLocaleString("id-ID")}</span>
+                                        <span className="text-white">Rp{getTotalPrice().toLocaleString("id-ID")}</span>
                                     </div>
-                                    <div className="flex justify-between text-gray-600">
+                                    <div className="flex justify-between text-gray-400">
                                         <span>Ongkos Kirim</span>
-                                        <span className="text-green-600">Gratis</span>
+                                        <span className="text-green-400">Gratis</span>
                                     </div>
-                                    <hr className="border-gray-200" />
-                                    <div className="flex justify-between text-lg font-bold text-gray-800">
-                                        <span>Total</span>
-                                        <span className="text-indigo-600">
+                                    <hr className="border-yellow-600/30" />
+                                    <div className="flex justify-between text-lg font-bold">
+                                        <span className="text-white">Total</span>
+                                        <span className="text-yellow-400">
                                             Rp{getTotalPrice().toLocaleString("id-ID")}
                                         </span>
                                     </div>
@@ -232,9 +236,9 @@ export default function CartPage() {
                                 <button
                                     onClick={handleCheckout}
                                     disabled={checkoutLoading || cart.length === 0}
-                                    className={`w-full py-4 rounded-xl font-semibold text-white transition-colors ${checkoutLoading
-                                        ? "bg-indigo-400 cursor-not-allowed"
-                                        : "bg-indigo-600 hover:bg-indigo-700"
+                                    className={`w-full py-4 rounded-xl font-semibold transition-colors ${checkoutLoading
+                                        ? "bg-yellow-600/50 text-black/50 cursor-not-allowed"
+                                        : "bg-gradient-to-r from-yellow-500 to-yellow-600 text-black hover:from-yellow-400 hover:to-yellow-500"
                                         }`}
                                 >
                                     {checkoutLoading ? "Memproses..." : "Checkout Sekarang"}

@@ -76,25 +76,30 @@ export default function RegisterPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50 px-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+        <div className="min-h-screen flex items-center justify-center bg-black px-4">
+            <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute top-20 left-10 w-72 h-72 bg-yellow-500/5 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-20 right-10 w-96 h-96 bg-yellow-600/5 rounded-full blur-3xl"></div>
+            </div>
+
+            <div className="relative bg-gray-900 rounded-2xl shadow-xl border border-yellow-600/30 w-full max-w-md p-8">
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-gray-800">
-                        Buat Akun Baru
+                    <h1 className="text-3xl font-bold text-white">
+                        Buat <span className="text-yellow-400">Akun</span> Baru
                     </h1>
-                    <p className="text-gray-600 mt-2">
+                    <p className="text-gray-400 mt-2">
                         Bergabung dan temukan parfum impianmu
                     </p>
                 </div>
 
                 {error && (
-                    <div className="mb-6 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+                    <div className="mb-6 p-3 bg-red-900/50 text-red-400 rounded-lg text-sm border border-red-600/30">
                         {error}
                     </div>
                 )}
 
                 {success && (
-                    <div className="mb-6 p-3 bg-green-50 text-green-600 rounded-lg text-sm">
+                    <div className="mb-6 p-3 bg-green-900/50 text-green-400 rounded-lg text-sm border border-green-600/30">
                         {success}
                     </div>
                 )}
@@ -103,7 +108,7 @@ export default function RegisterPage() {
                     <div>
                         <label
                             htmlFor="name"
-                            className="block text-sm font-medium text-gray-700 mb-1"
+                            className="block text-sm font-medium text-gray-300 mb-1"
                         >
                             Nama Lengkap
                         </label>
@@ -113,7 +118,7 @@ export default function RegisterPage() {
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             required
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
+                            className="w-full px-4 py-3 bg-gray-800 border border-yellow-600/30 text-white rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 focus:outline-none transition placeholder-gray-500"
                             placeholder="John Doe"
                         />
                     </div>
@@ -121,7 +126,7 @@ export default function RegisterPage() {
                     <div>
                         <label
                             htmlFor="email"
-                            className="block text-sm font-medium text-gray-700 mb-1"
+                            className="block text-sm font-medium text-gray-300 mb-1"
                         >
                             Email
                         </label>
@@ -131,7 +136,7 @@ export default function RegisterPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
+                            className="w-full px-4 py-3 bg-gray-800 border border-yellow-600/30 text-white rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 focus:outline-none transition placeholder-gray-500"
                             placeholder="contoh@email.com"
                         />
                     </div>
@@ -139,7 +144,7 @@ export default function RegisterPage() {
                     <div>
                         <label
                             htmlFor="password"
-                            className="block text-sm font-medium text-gray-700 mb-1"
+                            className="block text-sm font-medium text-gray-300 mb-1"
                         >
                             Kata Sandi
                         </label>
@@ -149,7 +154,7 @@ export default function RegisterPage() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
+                            className="w-full px-4 py-3 bg-gray-800 border border-yellow-600/30 text-white rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 focus:outline-none transition placeholder-gray-500"
                             placeholder="Minimal 6 karakter"
                         />
                     </div>
@@ -157,7 +162,7 @@ export default function RegisterPage() {
                     <div>
                         <label
                             htmlFor="passwordConfirmation"
-                            className="block text-sm font-medium text-gray-700 mb-1"
+                            className="block text-sm font-medium text-gray-300 mb-1"
                         >
                             Konfirmasi Kata Sandi
                         </label>
@@ -167,7 +172,7 @@ export default function RegisterPage() {
                             value={passwordConfirmation}
                             onChange={(e) => setPasswordConfirmation(e.target.value)}
                             required
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
+                            className="w-full px-4 py-3 bg-gray-800 border border-yellow-600/30 text-white rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 focus:outline-none transition placeholder-gray-500"
                             placeholder="Ulangi kata sandi"
                         />
                     </div>
@@ -175,20 +180,20 @@ export default function RegisterPage() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition ${loading
-                            ? "bg-indigo-400 cursor-not-allowed"
-                            : "bg-indigo-600 hover:bg-indigo-700"
+                        className={`w-full py-3 px-4 rounded-lg font-semibold transition ${loading
+                            ? "bg-yellow-600/50 text-black/50 cursor-not-allowed"
+                            : "bg-gradient-to-r from-yellow-500 to-yellow-600 text-black hover:from-yellow-400 hover:to-yellow-500"
                             }`}
                     >
                         {loading ? "Memproses..." : "Daftar"}
                     </button>
                 </form>
 
-                <div className="mt-6 text-center text-sm text-gray-600">
+                <div className="mt-6 text-center text-sm text-gray-400">
                     Sudah punya akun?{" "}
                     <button
                         onClick={() => router.push("/login")}
-                        className="text-indigo-600 font-medium hover:text-indigo-800"
+                        className="text-yellow-400 font-medium hover:text-yellow-300"
                     >
                         Masuk di sini
                     </button>

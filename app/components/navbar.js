@@ -52,11 +52,11 @@ export default function Navbar() {
   // Prevent hydration mismatch
   if (!mounted) {
     return (
-      <nav className="bg-white shadow-md sticky top-0 z-50">
+      <nav className="bg-black shadow-md sticky top-0 z-50 border-b border-yellow-600/30">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <span className="text-2xl font-bold text-indigo-700">
-              Jamal<span className="text-purple-600">Parfum</span>
+            <span className="text-2xl font-bold text-yellow-400">
+              Jamal<span className="text-white">Parfum</span>
             </span>
           </div>
         </div>
