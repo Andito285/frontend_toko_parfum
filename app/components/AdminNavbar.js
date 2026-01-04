@@ -28,7 +28,6 @@ export default function AdminNavbar({ user, onLogout }) {
                         href="/admin/dashboard"
                         className="text-2xl font-bold text-white hover:text-indigo-200 transition-colors flex items-center space-x-2"
                     >
-                        <span className="text-2xl">🛡️</span>
                         <span>Admin<span className="text-yellow-300">Panel</span></span>
                     </Link>
 

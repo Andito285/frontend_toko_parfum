@@ -124,6 +124,7 @@ export default function HomePage() {
     const results = perfumes.filter(
       (perfume) =>
         perfume.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        perfume.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         perfume.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredPerfumes(results);

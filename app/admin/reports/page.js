@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import api from "@/lib/api";
 import Link from "next/link";
-import { isAuthenticated, isAdmin, getAuthToken } from "@/lib/auth";
+import { isAuthenticated, isAdmin } from "@/lib/auth";
 
 export default function ReportsPage() {
     const [reports, setReports] = useState(null);
@@ -13,7 +13,6 @@ export default function ReportsPage() {
     const [error, setError] = useState("");
     const [activeTab, setActiveTab] = useState("overview");
     const router = useRouter();
-    const baseURL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
     useEffect(() => {
         if (!isAuthenticated()) {
@@ -29,20 +28,17 @@ export default function ReportsPage() {
 
     const fetchData = async () => {
         try {
-            const token = getAuthToken();
             const [reportsRes, ordersRes] = await Promise.all([
-                axios.get(`${baseURL}/api/admin/reports`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                }),
-                axios.get(`${baseURL}/api/admin/orders`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                }),
+                api.get("/api/admin/reports"),
+                api.get("/api/admin/orders"),
             ]);
             setReports(reportsRes.data);
             setOrders(ordersRes.data.data || ordersRes.data || []);
         } catch (err) {
             console.error("Error fetching reports:", err);
-            setError("Gagal memuat laporan.");
+            if (err.response?.status !== 401) {
+                setError("Gagal memuat laporan.");
+            }
         } finally {
             setLoading(false);
         }

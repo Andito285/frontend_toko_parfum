@@ -13,6 +13,7 @@ export default function UserNavbar({ user, onLogout }) {
     const navItems = [
         { name: "Beranda", href: "/" },
         { name: "Parfum", href: "/perfumes" },
+        { name: "Pesanan Saya", href: "/orders" },
         { name: "Tentang", href: "/about" },
     ];
 

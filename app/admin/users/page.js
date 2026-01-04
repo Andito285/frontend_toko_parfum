@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import api from "@/lib/api";
 import Link from "next/link";
-import { isAuthenticated, isAdmin, getAuthToken } from "@/lib/auth";
+import { isAuthenticated, isAdmin } from "@/lib/auth";
 
 export default function UsersPage() {
     const [users, setUsers] = useState([]);
@@ -19,7 +19,6 @@ export default function UsersPage() {
     const [editForm, setEditForm] = useState({ name: "", email: "", role: "" });
     const [saving, setSaving] = useState(false);
     const router = useRouter();
-    const baseURL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
     useEffect(() => {
         if (!isAuthenticated()) {
@@ -35,15 +34,15 @@ export default function UsersPage() {
 
     const fetchUsers = async () => {
         try {
-            const token = getAuthToken();
-            const res = await axios.get(`${baseURL}/api/admin/users`, {
-                headers: { Authorization: `Bearer ${token}` },
+            const res = await api.get("/api/admin/users", {
                 params: { search, per_page: 50 },
             });
             setUsers(res.data.data || res.data || []);
         } catch (err) {
             console.error("Error fetching users:", err);
-            setError("Gagal memuat data pengguna.");
+            if (err.response?.status !== 401) {
+                setError("Gagal memuat data pengguna.");
+            }
         } finally {
             setLoading(false);
         }
@@ -66,10 +65,7 @@ export default function UsersPage() {
 
         setDeleteLoading(userToDelete.id);
         try {
-            const token = getAuthToken();
-            await axios.delete(`${baseURL}/api/admin/users/${userToDelete.id}`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            await api.delete(`/api/admin/users/${userToDelete.id}`);
             setUsers(users.filter((u) => u.id !== userToDelete.id));
             setShowDeleteModal(false);
             setUserToDelete(null);
@@ -77,7 +73,9 @@ export default function UsersPage() {
             setTimeout(() => setSuccess(""), 3000);
         } catch (err) {
             console.error("Error deleting user:", err);
-            setError(err.response?.data?.message || "Gagal menghapus pengguna.");
+            if (err.response?.status !== 401) {
+                setError(err.response?.data?.message || "Gagal menghapus pengguna.");
+            }
         } finally {
             setDeleteLoading(null);
         }
@@ -92,17 +90,16 @@ export default function UsersPage() {
         e.preventDefault();
         setSaving(true);
         try {
-            const token = getAuthToken();
-            await axios.put(`${baseURL}/api/admin/users/${editModal.id}`, editForm, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            await api.put(`/api/admin/users/${editModal.id}`, editForm);
             setUsers(users.map((u) => (u.id === editModal.id ? { ...u, ...editForm } : u)));
             setEditModal(null);
             setSuccess("Pengguna berhasil diperbarui!");
             setTimeout(() => setSuccess(""), 3000);
         } catch (err) {
             console.error("Error updating user:", err);
-            setError(err.response?.data?.message || "Gagal memperbarui pengguna.");
+            if (err.response?.status !== 401) {
+                setError(err.response?.data?.message || "Gagal memperbarui pengguna.");
+            }
         } finally {
             setSaving(false);
         }

@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
-import axios from "axios";
+import api from "@/lib/api";
 import Link from "next/link";
-import { isAuthenticated, isAdmin, getAuthToken } from "@/lib/auth";
+import { isAuthenticated, isAdmin } from "@/lib/auth";
 
 export default function PerfumeImagesPage() {
     const [perfume, setPerfume] = useState(null);
@@ -33,22 +33,18 @@ export default function PerfumeImagesPage() {
 
     const fetchData = async () => {
         try {
-            const token = getAuthToken();
-
             // Fetch perfume details
-            const perfumeRes = await axios.get(`${baseURL}/api/perfumes/${perfumeId}`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const perfumeRes = await api.get(`/api/perfumes/${perfumeId}`);
             setPerfume(perfumeRes.data.data || perfumeRes.data);
 
             // Fetch perfume images
-            const imagesRes = await axios.get(`${baseURL}/api/admin/perfumes/${perfumeId}/images`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const imagesRes = await api.get(`/api/admin/perfumes/${perfumeId}/images`);
             setImages(imagesRes.data.data || imagesRes.data || []);
         } catch (err) {
             console.error("Error fetching data:", err);
-            setError("Gagal memuat data.");
+            if (err.response?.status !== 401) {
+                setError("Gagal memuat data.");
+            }
         } finally {
             setLoading(false);
         }
@@ -63,15 +59,13 @@ export default function PerfumeImagesPage() {
         setSuccess("");
 
         try {
-            const token = getAuthToken();
             const formData = new FormData();
 
             if (files.length === 1) {
                 // Single image upload
                 formData.append("image", files[0]);
-                await axios.post(`${baseURL}/api/admin/perfumes/${perfumeId}/images`, formData, {
+                await api.post(`/api/admin/perfumes/${perfumeId}/images`, formData, {
                     headers: {
-                        Authorization: `Bearer ${token}`,
                         "Content-Type": "multipart/form-data",
                     },
                 });
@@ -80,9 +74,8 @@ export default function PerfumeImagesPage() {
                 for (let i = 0; i < files.length; i++) {
                     formData.append("images", files[i]);
                 }
-                await axios.post(`${baseURL}/api/admin/perfumes/${perfumeId}/images/batch`, formData, {
+                await api.post(`/api/admin/perfumes/${perfumeId}/images/batch`, formData, {
                     headers: {
-                        Authorization: `Bearer ${token}`,
                         "Content-Type": "multipart/form-data",
                     },
                 });
@@ -92,7 +85,9 @@ export default function PerfumeImagesPage() {
             fetchData(); // Refresh images
         } catch (err) {
             console.error("Error uploading:", err);
-            setError("Gagal mengunggah gambar. " + (err.response?.data?.message || ""));
+            if (err.response?.status !== 401) {
+                setError("Gagal mengunggah gambar. " + (err.response?.data?.message || ""));
+            }
         } finally {
             setUploading(false);
             if (fileInputRef.current) {
@@ -103,17 +98,17 @@ export default function PerfumeImagesPage() {
 
     const handleSetPrimary = async (imageId) => {
         try {
-            const token = getAuthToken();
-            await axios.put(
-                `${baseURL}/api/admin/perfumes/${perfumeId}/images/${imageId}/primary`,
-                {},
-                { headers: { Authorization: `Bearer ${token}` } }
+            await api.put(
+                `/api/admin/perfumes/${perfumeId}/images/${imageId}/primary`,
+                {}
             );
             setSuccess("Gambar utama berhasil diubah!");
             fetchData();
         } catch (err) {
             console.error("Error setting primary:", err);
-            setError("Gagal mengatur gambar utama.");
+            if (err.response?.status !== 401) {
+                setError("Gagal mengatur gambar utama.");
+            }
         }
     };
 
@@ -121,15 +116,14 @@ export default function PerfumeImagesPage() {
         if (!confirm("Apakah Anda yakin ingin menghapus gambar ini?")) return;
 
         try {
-            const token = getAuthToken();
-            await axios.delete(`${baseURL}/api/admin/perfumes/${perfumeId}/images/${imageId}`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            await api.delete(`/api/admin/perfumes/${perfumeId}/images/${imageId}`);
             setSuccess("Gambar berhasil dihapus!");
             setImages(images.filter((img) => img.id !== imageId));
         } catch (err) {
             console.error("Error deleting:", err);
-            setError("Gagal menghapus gambar.");
+            if (err.response?.status !== 401) {
+                setError("Gagal menghapus gambar.");
+            }
         }
     };
 

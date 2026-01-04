@@ -2,13 +2,13 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import api from "@/lib/api";
 import Link from "next/link";
-import { getAuthToken } from "@/lib/auth";
 
 export default function CreatePerfumePage() {
     const [formData, setFormData] = useState({
         name: "",
+        brand: "",
         description: "",
         price: "",
         stock: "",
@@ -18,34 +18,61 @@ export default function CreatePerfumePage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const [isDragging, setIsDragging] = useState(false);
+    const [uploadError, setUploadError] = useState("");
     const fileInputRef = useRef(null);
+    const dragCounter = useRef(0);
     const router = useRouter();
     const baseURL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-    const token = getAuthToken();
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleImageSelect = (e) => {
-        const files = Array.from(e.target.files);
-        if (files.length === 0) return;
+    const processFiles = (files) => {
+        setUploadError("");
+        const fileArray = Array.from(files);
 
-        // Add new files to selected images
-        setSelectedImages((prev) => [...prev, ...files]);
+        const validFiles = [];
+        const errors = [];
 
-        // Create previews for new files
-        files.forEach((file) => {
+        fileArray.forEach((file) => {
+            if (!ALLOWED_TYPES.includes(file.type)) {
+                errors.push(`${file.name}: format tidak didukung`);
+            } else if (file.size > MAX_FILE_SIZE) {
+                errors.push(`${file.name}: ukuran melebihi 5MB`);
+            } else {
+                validFiles.push(file);
+            }
+        });
+
+        if (errors.length > 0) {
+            setUploadError(errors.join(", "));
+        }
+
+        if (validFiles.length === 0) return;
+
+        setSelectedImages((prev) => [...prev, ...validFiles]);
+
+        validFiles.forEach((file) => {
             const reader = new FileReader();
             reader.onloadend = () => {
                 setImagePreviews((prev) => [...prev, { file, preview: reader.result }]);
             };
             reader.readAsDataURL(file);
         });
+    };
 
-        // Reset file input
+    const handleImageSelect = (e) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        processFiles(files);
+
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
         }
@@ -54,6 +81,41 @@ export default function CreatePerfumePage() {
     const removeImage = (index) => {
         setSelectedImages((prev) => prev.filter((_, i) => i !== index));
         setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    const handleDragEnter = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounter.current++;
+        if (dragCounter.current === 1) {
+            setIsDragging(true);
+        }
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounter.current--;
+        if (dragCounter.current === 0) {
+            setIsDragging(false);
+        }
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounter.current = 0;
+        setIsDragging(false);
+
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+            processFiles(files);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -67,37 +129,30 @@ export default function CreatePerfumePage() {
                 throw new Error("Nama, harga, dan stok wajib diisi.");
             }
 
-            // Step 1: Create the perfume
-            const perfumeRes = await axios.post(`${baseURL}/api/admin/perfumes`, formData, {
+            const perfumeRes = await api.post("/api/admin/perfumes", formData, {
                 headers: {
-                    Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
             });
 
             const perfumeId = perfumeRes.data.id;
 
-            // Step 2: Upload images if any selected
             if (selectedImages.length > 0) {
                 const imageFormData = new FormData();
 
                 if (selectedImages.length === 1) {
-                    // Single image upload
                     imageFormData.append("image", selectedImages[0]);
-                    await axios.post(`${baseURL}/api/admin/perfumes/${perfumeId}/images`, imageFormData, {
+                    await api.post(`/api/admin/perfumes/${perfumeId}/images`, imageFormData, {
                         headers: {
-                            Authorization: `Bearer ${token}`,
                             "Content-Type": "multipart/form-data",
                         },
                     });
                 } else {
-                    // Multiple images upload
                     selectedImages.forEach((file) => {
-                        imageFormData.append("images", file);
+                        imageFormData.append("images[]", file);
                     });
-                    await axios.post(`${baseURL}/api/admin/perfumes/${perfumeId}/images/batch`, imageFormData, {
+                    await api.post(`/api/admin/perfumes/${perfumeId}/images/batch`, imageFormData, {
                         headers: {
-                            Authorization: `Bearer ${token}`,
                             "Content-Type": "multipart/form-data",
                         },
                     });
@@ -110,12 +165,14 @@ export default function CreatePerfumePage() {
             }, 1500);
         } catch (err) {
             console.error("Error creating perfume:", err);
-            const message =
-                err.response?.data?.message ||
-                err.response?.data?.errors?.[0] ||
-                err.message ||
-                "Gagal menambahkan parfum.";
-            setError(message);
+            if (err.response?.status !== 401) {
+                const message =
+                    err.response?.data?.message ||
+                    err.response?.data?.errors?.[0] ||
+                    err.message ||
+                    "Gagal menambahkan parfum.";
+                setError(message);
+            }
         } finally {
             setLoading(false);
         }
@@ -124,7 +181,6 @@ export default function CreatePerfumePage() {
     return (
         <div className="min-h-screen bg-gray-50 p-6">
             <div className="max-w-3xl mx-auto">
-                {/* Breadcrumb */}
                 <nav className="mb-6">
                     <ol className="flex items-center space-x-2 text-sm text-gray-600">
                         <li>
@@ -176,7 +232,22 @@ export default function CreatePerfumePage() {
                                 onChange={handleChange}
                                 required
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
-                                placeholder="Contoh: Chanel No.5"
+                                placeholder="Nama parfum"
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-1">
+                                Brand
+                            </label>
+                            <input
+                                id="brand"
+                                name="brand"
+                                type="text"
+                                value={formData.brand}
+                                onChange={handleChange}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
+                                placeholder="Contoh: Dior, Chanel, Tom Ford"
                             />
                         </div>
 
@@ -236,7 +307,17 @@ export default function CreatePerfumePage() {
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Gambar Parfum
                             </label>
-                            <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-indigo-400 transition-colors">
+                            <div
+                                onDragEnter={handleDragEnter}
+                                onDragLeave={handleDragLeave}
+                                onDragOver={handleDragOver}
+                                onDrop={handleDrop}
+                                onClick={() => fileInputRef.current?.click()}
+                                className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ${isDragging
+                                    ? "border-indigo-500 bg-indigo-50 scale-[1.02]"
+                                    : "border-gray-300 hover:border-indigo-400 hover:bg-gray-50"
+                                    }`}
+                            >
                                 <input
                                     ref={fileInputRef}
                                     type="file"
@@ -244,20 +325,24 @@ export default function CreatePerfumePage() {
                                     multiple
                                     onChange={handleImageSelect}
                                     className="hidden"
-                                    id="image-upload"
                                 />
-                                <label
-                                    htmlFor="image-upload"
-                                    className="cursor-pointer"
-                                >
-                                    <div className="text-4xl mb-2">📷</div>
-                                    <p className="text-gray-700 font-medium">
-                                        Klik untuk memilih gambar
+                                <div className={`text-5xl mb-3 transition-transform duration-200 ${isDragging ? "scale-110" : ""}`}>
+                                    {isDragging ? "📥" : "📷"}
+                                </div>
+                                <p className="text-gray-700 font-medium">
+                                    {isDragging ? "Lepaskan untuk upload" : "Drag & drop gambar di sini"}
+                                </p>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    atau klik untuk memilih file
+                                </p>
+                                <p className="text-xs text-gray-400 mt-2">
+                                    JPEG, PNG, GIF, WebP • Maks. 5MB • Multiple upload
+                                </p>
+                                {uploadError && (
+                                    <p className="text-xs text-red-500 mt-2 font-medium">
+                                        ⚠️ {uploadError}
                                     </p>
-                                    <p className="text-sm text-gray-500 mt-1">
-                                        Mendukung multiple upload (JPEG, PNG, GIF, WebP)
-                                    </p>
-                                </label>
+                                )}
                             </div>
 
                             {/* Image Previews */}
@@ -284,7 +369,7 @@ export default function CreatePerfumePage() {
                                                 <button
                                                     type="button"
                                                     onClick={() => removeImage(index)}
-                                                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                                                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
                                                 >
                                                     ×
                                                 </button>
@@ -298,7 +383,7 @@ export default function CreatePerfumePage() {
                         <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
                             <Link
                                 href="/admin/perfumes"
-                                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition cursor-pointer"
                             >
                                 Batal
                             </Link>
@@ -307,7 +392,7 @@ export default function CreatePerfumePage() {
                                 disabled={loading}
                                 className={`px-6 py-2 rounded-lg font-medium text-white transition ${loading
                                     ? "bg-indigo-400 cursor-not-allowed"
-                                    : "bg-indigo-600 hover:bg-indigo-700"
+                                    : "bg-indigo-600 hover:bg-indigo-700 cursor-pointer"
                                     }`}
                             >
                                 {loading ? "Menyimpan..." : "Simpan Parfum"}

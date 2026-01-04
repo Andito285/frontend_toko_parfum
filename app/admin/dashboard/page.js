@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
-import { getAuthUser, isAdmin, isAuthenticated, getAuthToken } from "@/lib/auth";
+import api from "@/lib/api";
+import { getAuthUser, isAdmin, isAuthenticated } from "@/lib/auth";
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState({
@@ -33,20 +33,14 @@ export default function AdminDashboardPage() {
 
   const fetchStats = async () => {
     try {
-      const token = getAuthToken();
-      const baseURL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
       // Ambil data statistik dari API Laravel
-      const res = await axios.get(`${baseURL}/api/admin/dashboard`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      const res = await api.get("/api/admin/dashboard");
       setStats(res.data || {});
     } catch (err) {
       console.error("Error fetching stats:", err);
-      setError("Gagal memuat statistik. Silakan coba lagi.");
+      if (err.response?.status !== 401) {
+        setError("Gagal memuat statistik. Silakan coba lagi.");
+      }
     } finally {
       setLoading(false);
     }
@@ -86,25 +80,21 @@ export default function AdminDashboardPage() {
           <StatCard
             title="Total Parfum"
             value={stats.totalPerfumes}
-            icon="📦"
             color="bg-blue-50 text-blue-700"
           />
           <StatCard
             title="Total Pengguna"
             value={stats.totalUsers}
-            icon="👥"
             color="bg-green-50 text-green-700"
           />
           <StatCard
             title="Penjualan Hari Ini"
             value={`Rp${(stats.totalSales || 0).toLocaleString("id-ID")}`}
-            icon="💰"
             color="bg-yellow-50 text-yellow-700"
           />
           <StatCard
             title="Stok Rendah"
             value={stats.lowStockCount}
-            icon="⚠️"
             color="bg-red-50 text-red-700"
           />
         </div>
@@ -114,7 +104,7 @@ export default function AdminDashboardPage() {
           <h2 className="text-xl font-semibold text-gray-800 mb-4">
             Aksi Cepat
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <QuickAction
               label="Tambah Parfum"
               onClick={() => router.push("/admin/perfumes/create")}
@@ -129,6 +119,11 @@ export default function AdminDashboardPage() {
               label="Kelola Pengguna"
               onClick={() => router.push("/admin/users")}
               icon="👨‍💼"
+            />
+            <QuickAction
+              label="Verifikasi Pesanan"
+              onClick={() => router.push("/admin/orders")}
+              icon="✅"
             />
             <QuickAction
               label="Lihat Laporan"

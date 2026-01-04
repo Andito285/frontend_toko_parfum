@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import api from "@/lib/api";
 import Link from "next/link";
-import { isAuthenticated, isAdmin, getAuthToken } from "@/lib/auth";
+import { isAuthenticated, isAdmin } from "@/lib/auth";
 
 export default function PerfumeListPage() {
     const [perfumes, setPerfumes] = useState([]);
@@ -14,7 +14,6 @@ export default function PerfumeListPage() {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [perfumeToDelete, setPerfumeToDelete] = useState(null);
     const router = useRouter();
-    const baseURL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
     useEffect(() => {
         if (!isAuthenticated()) {
@@ -30,15 +29,14 @@ export default function PerfumeListPage() {
 
     const fetchPerfumes = async () => {
         try {
-            const token = getAuthToken();
-            const res = await axios.get(`${baseURL}/api/perfumes`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const res = await api.get("/api/perfumes");
             const data = Array.isArray(res.data) ? res.data : res.data.data || [];
             setPerfumes(data);
         } catch (err) {
             console.error("Error fetching perfumes:", err);
-            setError("Gagal memuat data parfum.");
+            if (err.response?.status !== 401) {
+                setError("Gagal memuat data parfum.");
+            }
         } finally {
             setLoading(false);
         }
@@ -54,16 +52,15 @@ export default function PerfumeListPage() {
 
         setDeleteLoading(perfumeToDelete.id);
         try {
-            const token = getAuthToken();
-            await axios.delete(`${baseURL}/api/admin/perfumes/${perfumeToDelete.id}`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            await api.delete(`/api/admin/perfumes/${perfumeToDelete.id}`);
             setPerfumes(perfumes.filter((p) => p.id !== perfumeToDelete.id));
             setShowDeleteModal(false);
             setPerfumeToDelete(null);
         } catch (err) {
             console.error("Error deleting perfume:", err);
-            alert("Gagal menghapus parfum. " + (err.response?.data?.message || ""));
+            if (err.response?.status !== 401) {
+                alert("Gagal menghapus parfum. " + (err.response?.data?.message || ""));
+            }
         } finally {
             setDeleteLoading(null);
         }
@@ -137,6 +134,9 @@ export default function PerfumeListPage() {
                                             Parfum
                                         </th>
                                         <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                                            Brand
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
                                             Harga
                                         </th>
                                         <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
@@ -175,6 +175,11 @@ export default function PerfumeListPage() {
                                                         </p>
                                                     </div>
                                                 </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="text-gray-600">
+                                                    {perfume.brand || "-"}
+                                                </span>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className="font-medium text-gray-800">

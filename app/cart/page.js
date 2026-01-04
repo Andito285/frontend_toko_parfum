@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import api from "@/lib/api";
 import Link from "next/link";
-import { isAuthenticated, getAuthUser, getAuthToken } from "@/lib/auth";
+import { isAuthenticated, getAuthUser } from "@/lib/auth";
 
 export default function CartPage() {
     const [cart, setCart] = useState([]);
@@ -68,23 +68,20 @@ export default function CartPage() {
         setError("");
 
         try {
-            const token = getAuthToken();
             const items = cart.map((item) => ({
                 perfume_id: item.id,
                 quantity: item.quantity,
             }));
 
-            await axios.post(
-                `${baseURL}/api/orders`,
-                { items },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
+            await api.post("/api/orders", { items });
 
             saveCart([]);
             setSuccess("🎉 Pesanan berhasil dibuat! Terima kasih telah berbelanja.");
         } catch (err) {
             console.error("Checkout error:", err);
-            setError(err.response?.data?.error || "Gagal membuat pesanan. Silakan coba lagi.");
+            if (err.response?.status !== 401) {
+                setError(err.response?.data?.error || "Gagal membuat pesanan. Silakan coba lagi.");
+            }
         } finally {
             setCheckoutLoading(false);
         }
@@ -163,7 +160,6 @@ export default function CartPage() {
                                             />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-4xl">
-                                                🌸
                                             </div>
                                         )}
                                     </div>

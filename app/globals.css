@@ -44,3 +44,16 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Pointer cursor for interactive elements */
+button,
+a,
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+select,
+[role="button"],
+[onclick],
+.clickable {
+  cursor: pointer;
+}

@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
-import axios from "axios";
+import api from "@/lib/api";
 import Link from "next/link";
-import { isAuthenticated, isAdmin, getAuthToken } from "@/lib/auth";
+import { isAuthenticated, isAdmin } from "@/lib/auth";
 
 export default function EditPerfumePage() {
     const [formData, setFormData] = useState({
         name: "",
+        brand: "",
         description: "",
         price: "",
         stock: "",
@@ -21,6 +22,7 @@ export default function EditPerfumePage() {
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef(null);
     const router = useRouter();
     const params = useParams();
@@ -41,13 +43,11 @@ export default function EditPerfumePage() {
 
     const fetchPerfume = async () => {
         try {
-            const token = getAuthToken();
-            const res = await axios.get(`${baseURL}/api/perfumes/${perfumeId}`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const res = await api.get(`/api/perfumes/${perfumeId}`);
             const perfume = res.data.data || res.data;
             setFormData({
                 name: perfume.name || "",
+                brand: perfume.brand || "",
                 description: perfume.description || "",
                 price: perfume.price || "",
                 stock: perfume.stock || "",
@@ -55,7 +55,9 @@ export default function EditPerfumePage() {
             setExistingImages(perfume.images || []);
         } catch (err) {
             console.error("Error fetching perfume:", err);
-            setError("Gagal memuat data parfum.");
+            if (err.response?.status !== 401) {
+                setError("Gagal memuat data parfum.");
+            }
         } finally {
             setLoading(false);
         }
@@ -90,30 +92,72 @@ export default function EditPerfumePage() {
         setImagePreviews((prev) => prev.filter((_, i) => i !== index));
     };
 
+    const processFiles = (files) => {
+        const validFiles = Array.from(files).filter((file) =>
+            file.type.startsWith("image/")
+        );
+        if (validFiles.length === 0) return;
+
+        setSelectedImages((prev) => [...prev, ...validFiles]);
+
+        validFiles.forEach((file) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreviews((prev) => [...prev, { file, preview: reader.result }]);
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const handleDragEnter = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+            processFiles(files);
+        }
+    };
+
     const handleDeleteExistingImage = async (imageId) => {
         if (!confirm("Apakah Anda yakin ingin menghapus gambar ini?")) return;
 
         try {
-            const token = getAuthToken();
-            await axios.delete(`${baseURL}/api/admin/perfumes/${perfumeId}/images/${imageId}`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            await api.delete(`/api/admin/perfumes/${perfumeId}/images/${imageId}`);
             setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
             setSuccess("Gambar berhasil dihapus!");
             setTimeout(() => setSuccess(""), 3000);
         } catch (err) {
             console.error("Error deleting image:", err);
-            setError("Gagal menghapus gambar.");
+            if (err.response?.status !== 401) {
+                setError("Gagal menghapus gambar.");
+            }
         }
     };
 
     const handleSetPrimary = async (imageId) => {
         try {
-            const token = getAuthToken();
-            await axios.put(
-                `${baseURL}/api/admin/perfumes/${perfumeId}/images/${imageId}/primary`,
-                {},
-                { headers: { Authorization: `Bearer ${token}` } }
+            await api.put(
+                `/api/admin/perfumes/${perfumeId}/images/${imageId}/primary`,
+                {}
             );
             // Update local state
             setExistingImages((prev) =>
@@ -126,7 +170,9 @@ export default function EditPerfumePage() {
             setTimeout(() => setSuccess(""), 3000);
         } catch (err) {
             console.error("Error setting primary:", err);
-            setError("Gagal mengatur gambar utama.");
+            if (err.response?.status !== 401) {
+                setError("Gagal mengatur gambar utama.");
+            }
         }
     };
 
@@ -137,24 +183,21 @@ export default function EditPerfumePage() {
         setError("");
 
         try {
-            const token = getAuthToken();
             const imageFormData = new FormData();
 
             if (selectedImages.length === 1) {
                 imageFormData.append("image", selectedImages[0]);
-                await axios.post(`${baseURL}/api/admin/perfumes/${perfumeId}/images`, imageFormData, {
+                await api.post(`/api/admin/perfumes/${perfumeId}/images`, imageFormData, {
                     headers: {
-                        Authorization: `Bearer ${token}`,
                         "Content-Type": "multipart/form-data",
                     },
                 });
             } else {
                 selectedImages.forEach((file) => {
-                    imageFormData.append("images", file);
+                    imageFormData.append("images[]", file);
                 });
-                await axios.post(`${baseURL}/api/admin/perfumes/${perfumeId}/images/batch`, imageFormData, {
+                await api.post(`/api/admin/perfumes/${perfumeId}/images/batch`, imageFormData, {
                     headers: {
-                        Authorization: `Bearer ${token}`,
                         "Content-Type": "multipart/form-data",
                     },
                 });
@@ -166,7 +209,9 @@ export default function EditPerfumePage() {
             fetchPerfume(); // Refresh images
         } catch (err) {
             console.error("Error uploading images:", err);
-            setError("Gagal mengunggah gambar. " + (err.response?.data?.message || ""));
+            if (err.response?.status !== 401) {
+                setError("Gagal mengunggah gambar. " + (err.response?.data?.message || ""));
+            }
         } finally {
             setUploading(false);
         }
@@ -183,10 +228,8 @@ export default function EditPerfumePage() {
                 throw new Error("Nama, harga, dan stok wajib diisi.");
             }
 
-            const token = getAuthToken();
-            await axios.put(`${baseURL}/api/admin/perfumes/${perfumeId}`, formData, {
+            await api.put(`/api/admin/perfumes/${perfumeId}`, formData, {
                 headers: {
-                    Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
             });
@@ -197,12 +240,14 @@ export default function EditPerfumePage() {
             }, 1500);
         } catch (err) {
             console.error("Error updating perfume:", err);
-            const message =
-                err.response?.data?.message ||
-                err.response?.data?.errors?.[0] ||
-                err.message ||
-                "Gagal memperbarui parfum.";
-            setError(message);
+            if (err.response?.status !== 401) {
+                const message =
+                    err.response?.data?.message ||
+                    err.response?.data?.errors?.[0] ||
+                    err.message ||
+                    "Gagal memperbarui parfum.";
+                setError(message);
+            }
         } finally {
             setSaving(false);
         }
@@ -274,6 +319,21 @@ export default function EditPerfumePage() {
                                 onChange={handleChange}
                                 required
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-1">
+                                Brand
+                            </label>
+                            <input
+                                id="brand"
+                                name="brand"
+                                type="text"
+                                value={formData.brand}
+                                onChange={handleChange}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
+                                placeholder="Contoh: Dior, Chanel, Tom Ford"
                             />
                         </div>
 
@@ -379,7 +439,17 @@ export default function EditPerfumePage() {
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Tambah Gambar Baru
                             </label>
-                            <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-indigo-400 transition-colors">
+                            <div
+                                onDragEnter={handleDragEnter}
+                                onDragLeave={handleDragLeave}
+                                onDragOver={handleDragOver}
+                                onDrop={handleDrop}
+                                onClick={() => fileInputRef.current?.click()}
+                                className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200 ${isDragging
+                                    ? "border-indigo-500 bg-indigo-50 scale-[1.02]"
+                                    : "border-gray-300 hover:border-indigo-400 hover:bg-gray-50"
+                                    }`}
+                            >
                                 <input
                                     ref={fileInputRef}
                                     type="file"
@@ -387,13 +457,14 @@ export default function EditPerfumePage() {
                                     multiple
                                     onChange={handleImageSelect}
                                     className="hidden"
-                                    id="image-upload"
                                 />
-                                <label htmlFor="image-upload" className="cursor-pointer">
-                                    <div className="text-3xl mb-1">📷</div>
-                                    <p className="text-gray-700 font-medium text-sm">Klik untuk memilih gambar</p>
-                                    <p className="text-xs text-gray-500">JPEG, PNG, GIF, WebP</p>
-                                </label>
+                                <div className={`text-4xl mb-2 transition-transform duration-200 ${isDragging ? "scale-110" : ""}`}>
+                                    {isDragging ? "📥" : "📷"}
+                                </div>
+                                <p className="text-gray-700 font-medium text-sm">
+                                    {isDragging ? "Lepaskan untuk upload" : "Drag & drop gambar di sini"}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">atau klik untuk memilih file</p>
                             </div>
 
                             {/* New Image Previews */}
